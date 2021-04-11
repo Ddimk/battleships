@@ -12,12 +12,26 @@ void GameConsole::on_loose()
 }
 void GameConsole::start_place_ships(ship_def ships[10])
 {
-	/*for (int i = 0; i < 10; i++) {
-		cout << ships[i].x << endl;
-		ships[i].x += 1;
-	}*/
+	for (int i = 0; i < 10; i++) {
+		cout << "Input for ship with length " << ships[i].size << endl;
+		cout << "Input x: ";
+		cin >> ships[i].x;
+		cout << "Input y: ";
+		cin >> ships[i].y;
+		cout << "Input h or v: ";
+		char tmp;
+		cin >> tmp;
+		if (tmp == 'h')
+		{
+			ships[i].rot = HORIZONTAL;
+		}
+		else
+		{
+			ships[i].rot = VERTICAL;
+		}
+	}
 
-	ships[0].rot = HORIZONTAL;
+	/*ships[0].rot = HORIZONTAL;
 	ships[0].x = 6;
 	ships[0].y = 0;
 	ships[1].rot = VERTICAL;
@@ -46,7 +60,7 @@ void GameConsole::start_place_ships(ship_def ships[10])
 	ships[8].y = 8;
 	ships[9].rot = HORIZONTAL;
 	ships[9].x = 6;
-	ships[9].y = 5;
+	ships[9].y = 5;*/
 
 	cout << "place ships" << endl;
 }
