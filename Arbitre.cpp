@@ -12,6 +12,61 @@ Arbitre::Arbitre(Player* a, Player* b)
 	srand(time(nullptr));
 	end = true;
 }
+bool Arbitre::is_correct_placement(const ship_def test_ships[10])
+{
+	bool tmp[10][10] = { 0 };
+
+	for (int i = 0; i < 10; i++)
+	{
+		if (test_ships[i].x < 0 || test_ships[i].y < 0 ||
+			(test_ships[i].rot == VERTICAL && (test_ships[i].x > 9 || test_ships[i].y + test_ships[i].size - 1 > 9)) ||
+			(test_ships[i].rot == HORIZONTAL && (test_ships[i].y > 9 || test_ships[i].x + test_ships[i].size - 1 > 9)))
+		{
+			cout << "Ship " << i << " is outside of field" << endl;
+			return false;
+		}
+			
+		for (int l = -1; l < test_ships[i].size + 1; l++)
+		{
+			for (int w = -1; w < 2; w++)
+			{
+				int x, y;
+				if (test_ships[i].rot == HORIZONTAL)
+				{
+					x = test_ships[i].x + l;
+					y = test_ships[i].y + w;
+				}
+				else
+				{
+					x = test_ships[i].x + w;
+					y = test_ships[i].y + l;
+				}
+				if (x < 0 || x > 9 || y < 0 || y > 9)
+				{
+					continue;
+				}
+				if (tmp[x][y])
+				{
+					cout << "Ship " << i << " has collision" << endl;
+					return false;
+				}
+			}
+		}
+		for (int l = 0; l < test_ships[i].size; l++)
+		{
+			if (test_ships[i].rot == HORIZONTAL)
+			{
+				tmp[test_ships[i].x + l][test_ships[i].y] = true;
+			}
+			else
+			{
+				tmp[test_ships[i].x][test_ships[i].y + l] = true;
+			}
+		}
+	}
+
+	return true;
+}
 void Arbitre::reset_game()
 {
 	if (rand() & 1) {
@@ -30,7 +85,17 @@ void Arbitre::reset_game()
 	}
 
 	players[0]->start_place_ships(ships[0]);
+	while (!is_correct_placement(ships[0]))
+	{
+		cout << "Player 0 places ships incorrect" << endl;
+		players[0]->start_place_ships(ships[0]);
+	}
 	players[1]->start_place_ships(ships[1]);
+	while (!is_correct_placement(ships[1]))
+	{
+		cout << "Player 1 places ships incorrect" << endl;
+		players[1]->start_place_ships(ships[1]);
+	}
 
 	hp[0] = 20;
 	hp[1] = 20;

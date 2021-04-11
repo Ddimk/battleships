@@ -38,6 +38,7 @@ private:
 	void prepare_bf();
 public:
 	Arbitre(Player* a, Player* b);
+	static bool is_correct_placement(const ship_def ships[10]);
 	void reset_game();
 };
 
