@@ -115,6 +115,9 @@ void Arbitre::reset_game()
 			cout << "Incorrect coordinates" << endl;
 			continue;
 		}
+
+		cout << "Player " << side << " make step " << (char)(step.x + 'A') << step.y + 1 << endl;
+
 		switch (my[alt_side][step.x][step.y]) {
 		default:
 			cout << "Incorrect step" << endl;
@@ -177,11 +180,13 @@ void Arbitre::reset_game()
 			{
 				cout << "Ship destroyed" << endl;
 				enemy[side][step.x][step.y] = DROWNED;
+				my[alt_side][step.x][step.y] = DROWNED;
 				for (int i = 1; i < 5 && step.y - i >= 0; i++)
 				{
 					if (my[alt_side][step.x][step.y - i] == HITTED)
 					{
 						enemy[side][step.x][step.y - i] = DROWNED;
+						my[alt_side][step.x][step.y - i] = DROWNED;
 					}
 					else
 					{
@@ -197,6 +202,7 @@ void Arbitre::reset_game()
 					if (my[alt_side][step.x][step.y + i] == HITTED)
 					{
 						enemy[side][step.x][step.y + i] = DROWNED;
+						my[alt_side][step.x][step.y + i] = DROWNED;
 					}
 					else
 					{
@@ -212,6 +218,7 @@ void Arbitre::reset_game()
 					if (my[alt_side][step.x - i][step.y] == HITTED)
 					{
 						enemy[side][step.x - i][step.y] = DROWNED;
+						my[alt_side][step.x - i][step.y] = DROWNED;
 					}
 					else
 					{
@@ -227,6 +234,7 @@ void Arbitre::reset_game()
 					if (my[alt_side][step.x + i][step.y] == HITTED)
 					{
 						enemy[side][step.x + i][step.y] = DROWNED;
+						my[alt_side][step.x + i][step.y] = DROWNED;
 					}
 					else
 					{

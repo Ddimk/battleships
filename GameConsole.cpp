@@ -31,7 +31,8 @@ void GameConsole::start_place_ships(ship_def ships[10])
 		}
 	}
 
-	/*ships[0].rot = HORIZONTAL;
+	/*
+	ships[0].rot = HORIZONTAL;
 	ships[0].x = 6;
 	ships[0].y = 0;
 	ships[1].rot = VERTICAL;
