@@ -17,37 +17,126 @@ void AIOpponent::on_loose()
 
 void AIOpponent::start_place_ships(ship_def ships[10])
 {
-	ships[0].rot = HORIZONTAL;
-	ships[0].x = 6;
-	ships[0].y = 0;
-	ships[1].rot = VERTICAL;
-	ships[1].x = 3;
-	ships[1].y = 0;
-	ships[2].rot = VERTICAL;
-	ships[2].x = 1;
-	ships[2].y = 4;
-	ships[3].rot = HORIZONTAL;
-	ships[3].x = 0;
-	ships[3].y = 0;
-	ships[4].rot = VERTICAL;
-	ships[4].x = 9;
-	ships[4].y = 2;
-	ships[5].rot = VERTICAL;
-	ships[5].x = 8;
-	ships[5].y = 8;
-	ships[6].rot = HORIZONTAL;
-	ships[6].x = 0;
-	ships[6].y = 9;
-	ships[7].rot = HORIZONTAL;
-	ships[7].x = 3;
-	ships[7].y = 8;
-	ships[8].rot = HORIZONTAL;
-	ships[8].x = 5;
-	ships[8].y = 8;
-	ships[9].rot = HORIZONTAL;
-	ships[9].x = 6;
-	ships[9].y = 5;
-
+	bool is_finish;
+	do
+	{
+		is_finish = true;
+		bool bf[10][10];
+		for (int i = 0; i < 10; i++)
+			for (int j = 0; j < 10; j++)
+				bf[i][j] = true;
+		for (int i = 0; i < 10; i++)
+		{
+			bool is_placed = false;
+			while (!is_placed && is_finish)
+			{
+				bool can_add = true;
+				if (rand() % 2)
+				{
+					ships[i].rot = HORIZONTAL;
+					ships[i].x = rand() % (11 - ships[i].size);
+					ships[i].y = rand() % 10;
+					for (int x = ships[i].x; x < ships[i].x + ships[i].size; x++)
+					{
+						can_add = can_add && bf[x][ships[i].y];
+					}
+				}
+				else
+				{
+					ships[i].rot = VERTICAL;
+					ships[i].x = rand() % 10;
+					ships[i].y = rand() % (11 - ships[i].size);
+					for (int y = ships[i].y; y < ships[i].y + ships[i].size; y++)
+					{
+						can_add = can_add && bf[ships[i].x][y];
+					}
+				}
+				if (can_add)
+				{
+					is_placed = true;
+					if (ships[i].rot == HORIZONTAL)
+					{
+						for (int x = max(0, ships[i].x - 1); x < min(10, ships[i].x + ships[i].size + 1); x++)
+						{
+							for (int y = max(0, ships[i].y - 1); y < min(10, ships[i].y + 3); y++)
+							{
+								bf[x][y] = false;
+							}
+						}
+					}
+					else
+					{
+						for (int x = max(0, ships[i].x - 1); x < min(10, ships[i].x + 3); x++)
+						{
+							for (int y = max(0, ships[i].y - 1); y < min(10, ships[i].y + ships[i].size + 1); y++)
+							{
+								bf[x][y] = false;
+							}
+						}
+					}
+				}
+				else
+				{
+					is_finish = false;
+					for (int x = 0; x < 10; x++)
+					{
+						int count = 0;
+						for (int y = 0; y < 10; y++)
+						{
+							if (bf[x][y])
+							{
+								count++;
+								if (count == ships[i].size)
+								{
+									is_finish = true;
+									break;
+								}
+							}
+							else
+							{
+								count = 0;
+							}
+						}
+						if (is_finish)
+						{
+							break;
+						}
+					}
+					if (!is_finish)
+					{
+						for (int y = 0; y < 10; y++)
+						{
+							int count = 0;
+							for (int x = 0; x < 10; x++)
+							{
+								if (bf[x][y])
+								{
+									count++;
+									if (count == ships[i].size)
+									{
+										is_finish = true;
+										break;
+									}
+								}
+								else
+								{
+									count = 0;
+								}
+							}
+							if (is_finish)
+							{
+								break;
+							}
+						}
+					}
+				}
+			}
+			if (!is_finish)
+			{
+				break;
+			}
+		}
+	} while (!is_finish);
 }
 
 pos2d AIOpponent::on_step(const bf_tile my[10][10], const bf_tile enemy[10][10])
