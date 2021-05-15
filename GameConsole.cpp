@@ -63,8 +63,10 @@ void GameConsole::start_place_ships(ship_def ships[10])
     ships[9].y = 5;
 
     cout << "place ships" << endl;
+    responded();
 }
-pos2d GameConsole::on_step(const bf_tile my[10][10], const bf_tile enemy[10][10])
+
+void GameConsole::on_step(const bf_tile my[10][10], const bf_tile enemy[10][10], pos2d *result)
 {
     cout << "Make shot" << endl;
     cout << "  ABCDEFGHIJ   ABCDEFGHIJ" << endl;
@@ -137,7 +139,8 @@ pos2d GameConsole::on_step(const bf_tile my[10][10], const bf_tile enemy[10][10]
 
     cin >> x >> y;
 
-    pos2d a = { x - 'a', y - 1 };
-    cout << "step " << a.x << " " << a.y << endl;
-    return a;
+    result->x = x - 'a';
+    result->y = y - 1;
+    responded();
+    return;
 }

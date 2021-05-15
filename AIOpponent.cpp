@@ -136,9 +136,10 @@ void AIOpponent::start_place_ships(ship_def ships[10])
             }
         }
     } while (!is_finish);
+    responded();
 }
 
-pos2d AIOpponent::on_step(const bf_tile my[10][10], const bf_tile enemy[10][10])
+void AIOpponent::on_step(const bf_tile my[10][10], const bf_tile enemy[10][10], pos2d* result)
 {
     pos2d res;
 
@@ -219,37 +220,43 @@ pos2d AIOpponent::on_step(const bf_tile my[10][10], const bf_tile enemy[10][10])
                         {
                             if (x + i < 10 && enemy[x + i][y] == UNKNOWN)
                             {
-                                res.x = x + i;
-                                res.y = y;
-                                return res;
+                                result->x = x + i;
+                                result->y = y;
+                                responded();
+                                return;
                             }
                             if (x - i > 0 && enemy[x - i][y] == UNKNOWN)
                             {
-                                res.x = x - i;
-                                res.y = y;
-                                return res;
+                                result->x = x - i;
+                                result->y = y;
+                                responded();
+                                return;
                             }
                         }
                         else
                         {
                             if (y + i < 10 && enemy[x][y + i] == UNKNOWN)
                             {
-                                res.x = x;
-                                res.y = y + i;
-                                return res;
+                                result->x = x;
+                                result->y = y + i;
+                                responded();
+                                return;
                             }
                             if (y - i > 0 && enemy[x][y - i] == UNKNOWN)
                             {
-                                res.x = x;
-                                res.y = y - i;
-                                return res;
+                                result->x = x;
+                                result->y = y - i;
+                                responded();
+                                return;
                             }
                         }
                     }
                 }
                 else
                 {
-                    return shoot_near[rand() % shoot_near.size()];
+                    *result = shoot_near[rand() % shoot_near.size()];
+                    responded();
+                    return;
                 }
             }
 
@@ -276,14 +283,20 @@ pos2d AIOpponent::on_step(const bf_tile my[10][10], const bf_tile enemy[10][10])
 
     if (pass_3.size())
     {
-        return pass_3[rand() % pass_3.size()];
+        *result = pass_3[rand() % pass_3.size()];
+        responded();
+        return;
     }
     else if (pass_1.size())
     {
-        return pass_1[rand() % pass_1.size()];
+        *result = pass_1[rand() % pass_1.size()];
+        responded();
+        return;
     }
     else
     {
-        return pass_0[rand() % pass_0.size()];
+        *result = pass_0[rand() % pass_0.size()];
+        responded();
+        return;
     }
 }

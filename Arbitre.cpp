@@ -10,7 +10,9 @@ Arbitre::Arbitre(Player *a, Player *b)
     players[0] = a;
     players[1] = b;
     srand(time(nullptr));
-    end = true;
+    players[0]->set_responding(&is_player_responded[0]);
+    players[1]->set_responding(&is_player_responded[1]);
+    state = NEED_INIT;
 }
 bool Arbitre::is_correct_placement(const ship_def test_ships[10])
 {
@@ -69,212 +71,266 @@ bool Arbitre::is_correct_placement(const ship_def test_ships[10])
 
     return true;
 }
-void Arbitre::reset_game()
+void Arbitre::do_actions()
 {
-    if (rand() & 1)
+    switch (state)
     {
-        swap(players[0], players[1]);
-    }
+        // Simply state with no user responces.
+    case NEED_INIT: {
+        current_player = rand() & 1;
 
-    for (int i = 0; i < 10; i++)
-    {
-        for (int j = 0; j < 10; j++)
+        for (int i = 0; i < 10; i++)
         {
-            my[0][i][j] = UNKNOWN;
-            my[1][i][j] = UNKNOWN;
-            enemy[0][i][j] = UNKNOWN;
-            enemy[1][i][j] = UNKNOWN;
-        }
-    }
-
-    players[0]->start_place_ships(ships[0]);
-    while (!is_correct_placement(ships[0]))
-    {
-        cout << "Player 0 places ships incorrect" << endl;
-        players[0]->start_place_ships(ships[0]);
-    }
-    players[1]->start_place_ships(ships[1]);
-    while (!is_correct_placement(ships[1]))
-    {
-        cout << "Player 1 places ships incorrect" << endl;
-        players[1]->start_place_ships(ships[1]);
-    }
-
-    hp[0] = 20;
-    hp[1] = 20;
-
-    prepare_bf();
-
-    end = false;
-    pos2d step;
-    int side = 0;
-    int alt_side = 1;
-    while (!end)
-    {
-        cout << endl << "STEP OF PLAYER " << side << endl << endl;
-        step = players[side]->on_step(my[side], enemy[side]);
-        if (step.x < 0 || step.x > 9 || step.y < 0 || step.y > 9)
-        {
-            cout << "Incorrect coordinates" << endl;
-            continue;
+            for (int j = 0; j < 10; j++)
+            {
+                my[0][i][j] = UNKNOWN;
+                my[1][i][j] = UNKNOWN;
+                enemy[0][i][j] = UNKNOWN;
+                enemy[1][i][j] = UNKNOWN;
+            }
         }
 
-        cout << "Player " << side << " make step " << (char)(step.x + 'A') << step.y + 1 << endl;
+        state = PLACING;
+        is_player_responded[0] = false;
+        is_player_responded[1] = false;
 
-        switch (my[alt_side][step.x][step.y])
+        // Start placing but not wait for completion (do it in next state).
+        players[current_player]->start_place_ships(ships[current_player]);
+
+        break;
+    }
+        // State which must be completed once per player.
+    case PLACING: {
+        if (is_player_responded[current_player])
         {
-        default:
-            cout << "Incorrect step" << endl;
-            break;
-        case UNKNOWN:
-            my[alt_side][step.x][step.y] = MISS;
-            enemy[side][step.x][step.y] = MISS;
-            swap(side, alt_side);
-            break;
-        case INTACT:
-            my[alt_side][step.x][step.y] = HITTED;
-            enemy[side][step.x][step.y] = HITTED;
+            if (is_correct_placement(ships[current_player]))
+            {
+                // This player placed ships. Done with him.
+                current_player = 1 - current_player;
+                if (is_player_responded[current_player])
+                {
+                    // Second player already correctly placed ships. We can start game.
+                    /// TODO: Change when add more ships.
+                    hp[0] = 20;
+                    hp[1] = 20;
 
-            bool is_fully_drown = true;
-            for (int i = 1; i < 4 && step.y - i >= 0; i++)
-            {
-                if (my[alt_side][step.x][step.y - i] != HITTED)
+                    prepare_bf();
+                    state = GAME_STEP;
+
+                    is_player_responded[0] = false;
+                    is_player_responded[1] = false;
+
+                    // Request first player move.
+                    players[current_player]->on_step(my[current_player], enemy[current_player],
+                                                     &step);
+                }
+                else
                 {
-                    if (my[alt_side][step.x][step.y - i] == INTACT)
-                    {
-                        is_fully_drown = false;
-                    }
-                    break;
+                    players[current_player]->start_place_ships(ships[current_player]);
                 }
             }
-            for (int i = 1; i < 4 && step.y + i < 10; i++)
+            else
             {
-                if (my[alt_side][step.x][step.y + i] != HITTED)
-                {
-                    if (my[alt_side][step.x][step.y + i] == INTACT)
-                    {
-                        is_fully_drown = false;
-                    }
-                    break;
-                }
+                // Incorrect placement, require resubmitting.
+                is_player_responded[current_player] = false;
+                players[current_player]->start_place_ships(ships[current_player]);
             }
-            for (int i = 1; i < 4 && step.x - i >= 0; i++)
+        }
+        break;
+    }
+        // Player do single step.
+    case GAME_STEP: {
+        if (is_player_responded[current_player])
+        {
+            int side = current_player;
+            int alt_side = 1 - side;
+
+            if (step.x < 0 || step.x > 9 || step.y < 0 || step.y > 9)
             {
-                if (my[alt_side][step.x - i][step.y] != HITTED)
-                {
-                    if (my[alt_side][step.x - i][step.y] == INTACT)
-                    {
-                        is_fully_drown = false;
-                    }
-                    break;
-                }
+                // Out of field; immediately re-request player step.
+                cout << "Incorrect coordinates" << endl;
+                is_player_responded[current_player] = false;
+                players[current_player]->on_step(my[current_player], enemy[current_player], &step);
+                break; // end of GAME_STEP
             }
-            for (int i = 1; i < 4 && step.x + i < 10; i++)
+
+            cout << "Player " << side << " make step " << (char)(step.x + 'A') << step.y + 1
+                 << endl;
+
+            switch (my[alt_side][step.x][step.y])
             {
-                if (my[alt_side][step.x + i][step.y] != HITTED)
-                {
-                    if (my[alt_side][step.x + i][step.y] == INTACT)
-                    {
-                        is_fully_drown = false;
-                    }
-                    break;
-                }
+                // Unknown state (shot on already marked cell).
+            default: {
+                cout << "Incorrect step" << endl;
+                break;
             }
-            if (is_fully_drown)
-            {
-                cout << "Ship destroyed" << endl;
-                enemy[side][step.x][step.y] = DROWNED;
-                my[alt_side][step.x][step.y] = DROWNED;
-                for (int i = 1; i < 5 && step.y - i >= 0; i++)
+                // Player miss. Change sides.
+            case UNKNOWN: {
+                my[alt_side][step.x][step.y] = MISS;
+                enemy[side][step.x][step.y] = MISS;
+                swap(side, alt_side);
+                break;
+            }
+                // Hit enemy ship.
+            case INTACT:
+                my[alt_side][step.x][step.y] = HITTED;
+                enemy[side][step.x][step.y] = HITTED;
+
+                bool is_fully_drown = true;
+                // Check in every side if ship drowned.
+                for (int i = 1; i < 4 && step.y - i >= 0; i++)
                 {
-                    if (my[alt_side][step.x][step.y - i] == HITTED)
+                    if (my[alt_side][step.x][step.y - i] != HITTED)
                     {
-                        enemy[side][step.x][step.y - i] = DROWNED;
-                        my[alt_side][step.x][step.y - i] = DROWNED;
-                    }
-                    else
-                    {
-                        if (my[alt_side][step.x][step.y - i] == UNKNOWN)
+                        if (my[alt_side][step.x][step.y - i] == INTACT)
                         {
-                            enemy[side][step.x][step.y - i] = USELESS;
+                            is_fully_drown = false;
                         }
                         break;
                     }
                 }
-                for (int i = 1; i < 5 && step.y + i < 10; i++)
+                for (int i = 1; i < 4 && step.y + i < 10; i++)
                 {
-                    if (my[alt_side][step.x][step.y + i] == HITTED)
+                    if (my[alt_side][step.x][step.y + i] != HITTED)
                     {
-                        enemy[side][step.x][step.y + i] = DROWNED;
-                        my[alt_side][step.x][step.y + i] = DROWNED;
-                    }
-                    else
-                    {
-                        if (my[alt_side][step.x][step.y + i] == UNKNOWN)
+                        if (my[alt_side][step.x][step.y + i] == INTACT)
                         {
-                            enemy[side][step.x][step.y + i] = USELESS;
+                            is_fully_drown = false;
                         }
                         break;
                     }
                 }
-                for (int i = 1; i < 5 && step.x - i >= 0; i++)
+                for (int i = 1; i < 4 && step.x - i >= 0; i++)
                 {
-                    if (my[alt_side][step.x - i][step.y] == HITTED)
+                    if (my[alt_side][step.x - i][step.y] != HITTED)
                     {
-                        enemy[side][step.x - i][step.y] = DROWNED;
-                        my[alt_side][step.x - i][step.y] = DROWNED;
-                    }
-                    else
-                    {
-                        if (my[alt_side][step.x - i][step.y] == UNKNOWN)
+                        if (my[alt_side][step.x - i][step.y] == INTACT)
                         {
-                            enemy[side][step.x - i][step.y] = USELESS;
+                            is_fully_drown = false;
                         }
                         break;
                     }
                 }
-                for (int i = 1; i < 5 && step.x + i < 10; i++)
+                for (int i = 1; i < 4 && step.x + i < 10; i++)
                 {
-                    if (my[alt_side][step.x + i][step.y] == HITTED)
+                    if (my[alt_side][step.x + i][step.y] != HITTED)
                     {
-                        enemy[side][step.x + i][step.y] = DROWNED;
-                        my[alt_side][step.x + i][step.y] = DROWNED;
-                    }
-                    else
-                    {
-                        if (my[alt_side][step.x + i][step.y] == UNKNOWN)
+                        if (my[alt_side][step.x + i][step.y] == INTACT)
                         {
-                            enemy[side][step.x + i][step.y] = USELESS;
+                            is_fully_drown = false;
                         }
                         break;
                     }
                 }
+                // Mark ship and area near it in case if it fully drown.
+                if (is_fully_drown)
+                {
+                    cout << "Ship destroyed" << endl;
+                    enemy[side][step.x][step.y] = DROWNED;
+                    my[alt_side][step.x][step.y] = DROWNED;
+                    for (int i = 1; i < 5 && step.y - i >= 0; i++)
+                    {
+                        if (my[alt_side][step.x][step.y - i] == HITTED)
+                        {
+                            enemy[side][step.x][step.y - i] = DROWNED;
+                            my[alt_side][step.x][step.y - i] = DROWNED;
+                        }
+                        else
+                        {
+                            if (my[alt_side][step.x][step.y - i] == UNKNOWN)
+                            {
+                                enemy[side][step.x][step.y - i] = USELESS;
+                            }
+                            break;
+                        }
+                    }
+                    for (int i = 1; i < 5 && step.y + i < 10; i++)
+                    {
+                        if (my[alt_side][step.x][step.y + i] == HITTED)
+                        {
+                            enemy[side][step.x][step.y + i] = DROWNED;
+                            my[alt_side][step.x][step.y + i] = DROWNED;
+                        }
+                        else
+                        {
+                            if (my[alt_side][step.x][step.y + i] == UNKNOWN)
+                            {
+                                enemy[side][step.x][step.y + i] = USELESS;
+                            }
+                            break;
+                        }
+                    }
+                    for (int i = 1; i < 5 && step.x - i >= 0; i++)
+                    {
+                        if (my[alt_side][step.x - i][step.y] == HITTED)
+                        {
+                            enemy[side][step.x - i][step.y] = DROWNED;
+                            my[alt_side][step.x - i][step.y] = DROWNED;
+                        }
+                        else
+                        {
+                            if (my[alt_side][step.x - i][step.y] == UNKNOWN)
+                            {
+                                enemy[side][step.x - i][step.y] = USELESS;
+                            }
+                            break;
+                        }
+                    }
+                    for (int i = 1; i < 5 && step.x + i < 10; i++)
+                    {
+                        if (my[alt_side][step.x + i][step.y] == HITTED)
+                        {
+                            enemy[side][step.x + i][step.y] = DROWNED;
+                            my[alt_side][step.x + i][step.y] = DROWNED;
+                        }
+                        else
+                        {
+                            if (my[alt_side][step.x + i][step.y] == UNKNOWN)
+                            {
+                                enemy[side][step.x + i][step.y] = USELESS;
+                            }
+                            break;
+                        }
+                    }
+                }
+                if (step.x > 0 && step.y > 0 && my[alt_side][step.x - 1][step.y - 1] == UNKNOWN)
+                {
+                    enemy[side][step.x - 1][step.y - 1] = USELESS;
+                }
+                if (step.x < 9 && step.y > 0 && my[alt_side][step.x + 1][step.y - 1] == UNKNOWN)
+                {
+                    enemy[side][step.x + 1][step.y - 1] = USELESS;
+                }
+                if (step.x < 9 && step.y < 9 && my[alt_side][step.x + 1][step.y + 1] == UNKNOWN)
+                {
+                    enemy[side][step.x + 1][step.y + 1] = USELESS;
+                }
+                if (step.x > 0 && step.y < 9 && my[alt_side][step.x - 1][step.y + 1] == UNKNOWN)
+                {
+                    enemy[side][step.x - 1][step.y + 1] = USELESS;
+                }
+                hp[alt_side] -= 1;
+                break;
             }
-            if (step.x > 0 && step.y > 0 && my[alt_side][step.x - 1][step.y - 1] == UNKNOWN)
+
+            if (hp[alt_side] == 0)
             {
-                enemy[side][step.x - 1][step.y - 1] = USELESS;
+                // End of match.
+                players[side]->on_win();
+                players[alt_side]->on_loose();
+
+                state = NEED_INIT;
             }
-            if (step.x < 9 && step.y > 0 && my[alt_side][step.x + 1][step.y - 1] == UNKNOWN)
+            else
             {
-                enemy[side][step.x + 1][step.y - 1] = USELESS;
+                current_player = side;
+                is_player_responded[current_player] = false;
+                players[current_player]->on_step(my[current_player], enemy[current_player], &step);
             }
-            if (step.x < 9 && step.y < 9 && my[alt_side][step.x + 1][step.y + 1] == UNKNOWN)
-            {
-                enemy[side][step.x + 1][step.y + 1] = USELESS;
-            }
-            if (step.x > 0 && step.y < 9 && my[alt_side][step.x - 1][step.y + 1] == UNKNOWN)
-            {
-                enemy[side][step.x - 1][step.y + 1] = USELESS;
-            }
-            hp[alt_side] -= 1;
             break;
         }
-
-        end = hp[alt_side] == 0;
     }
-
-    players[side]->on_win();
-    players[alt_side]->on_loose();
+    }
 }
 
 void Arbitre::prepare_bf()

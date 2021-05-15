@@ -4,6 +4,13 @@
 class Arbitre
 {
 private:
+    enum game_state
+    {
+        NEED_INIT,
+        PLACING,
+        GAME_STEP
+    };
+
     Player *players[2];
     bf_tile my[2][10][10];
     bf_tile enemy[2][10][10];
@@ -28,11 +35,18 @@ private:
                                 { 1, HORIZONTAL, 0, 0 },
                                 { 1, HORIZONTAL, 0, 0 } } };
     int hp[2];
-    bool end;
     void prepare_bf();
+    bool is_player_responded[2];
+    pos2d step;
+    int current_player;
+    game_state state;
 
 public:
     Arbitre(Player *a, Player *b);
     static bool is_correct_placement(const ship_def ships[10]);
-    void reset_game();
+    void reset_game()
+    {
+        state = NEED_INIT;
+    };
+    void do_actions();
 };

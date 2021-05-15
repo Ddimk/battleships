@@ -30,9 +30,16 @@ typedef struct
 
 class Player
 {
+private:
+    bool *_responded;
+
 public:
+    void set_responding(bool *respond) { this->_responded = respond; }
     virtual void on_win() = 0;
     virtual void on_loose() = 0;
     virtual void start_place_ships(ship_def ships[10]) = 0;
-    virtual pos2d on_step(const bf_tile my[10][10], const bf_tile enemy[10][10]) = 0;
+    virtual void on_step(const bf_tile my[10][10], const bf_tile enemy[10][10], pos2d *result) = 0;
+
+protected:
+    void responded() { *_responded = true; }
 };
