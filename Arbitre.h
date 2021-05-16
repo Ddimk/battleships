@@ -8,7 +8,8 @@ private:
     {
         NEED_INIT,
         PLACING,
-        GAME_STEP
+        GAME_STEP,
+        GAME_ENDED
     };
 
     Player *players[2];
@@ -46,7 +47,12 @@ public:
     static bool is_correct_placement(const ship_def ships[10]);
     void reset_game()
     {
-        state = NEED_INIT;
+        state = GAME_ENDED;
+        is_player_responded[0] = false;
+        is_player_responded[1] = false;
+        players[0]->need_reset();
+        players[1]->need_reset();
+        do_actions();
     };
     void do_actions();
 };

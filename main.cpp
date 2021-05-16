@@ -1,29 +1,24 @@
 #include "Arbitre.h"
-#include "GameConsole.h"
-//#include "GameUI.h"
+#include "GameUI.h"
 #include "AIOpponent.h"
 
-#define Uses_TApplication
-#define Uses_TStaticText
-#define Uses_TButton
+Arbitre *game;
 
-//#include <tvision/tv.h>
-
+// Will be called by players.
+void do_game_step()
+{
+    game->do_actions();
+}
 
 int main(void)
 {
-    GameConsole a;
+    GameUI a;
     AIOpponent b;
-    Arbitre game(&a, &b);
-    game.reset_game();
+    game = new Arbitre(&a, &b);
+    a.set_game_step(do_game_step);
+    game->reset_game();
 
-    while (true)
-    {
-        game.do_actions();
-    }
-
-    //THelloApp helloWorld;
-    //helloWorld.run();
+    a.run();
 
     return 0;
 }

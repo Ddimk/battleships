@@ -12,7 +12,8 @@ Arbitre::Arbitre(Player *a, Player *b)
     srand(time(nullptr));
     players[0]->set_responding(&is_player_responded[0]);
     players[1]->set_responding(&is_player_responded[1]);
-    state = NEED_INIT;
+    // Do not ask players for reset as we call reset_game explicitely.
+    state = GAME_ENDED;
 }
 bool Arbitre::is_correct_placement(const ship_def test_ships[10])
 {
@@ -319,7 +320,13 @@ void Arbitre::do_actions()
                 players[side]->on_win();
                 players[alt_side]->on_loose();
 
-                state = NEED_INIT;
+                is_player_responded[0] = false;
+                is_player_responded[1] = false;
+
+                players[0]->need_reset();
+                players[1]->need_reset();
+
+                state = GAME_ENDED;
             }
             else
             {
@@ -329,6 +336,15 @@ void Arbitre::do_actions()
             }
             break;
         }
+    }
+        // Do nothing; wait for game resart.
+    case GAME_ENDED: {
+        if (is_player_responded[0] && is_player_responded[1])
+        {
+            // Both of players want a new game.
+            state = NEED_INIT;
+        }
+        break;
     }
     }
 }
