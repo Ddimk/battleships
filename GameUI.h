@@ -7,6 +7,7 @@
 #define Uses_TRect
 #define Uses_TDialog
 #define Uses_TParamText
+#define Uses_TStaticText
 #define Uses_TButton
 #define Uses_TMenuBar
 #define Uses_TSubMenu
@@ -22,7 +23,9 @@
 class GameWindow : public TWindow
 {
 private:
-    TParamText *my_field[21];
+    TStaticText *labels[41];
+    TParamText *my_field[20][20];
+    TParamText *other_field[20][20];
 
 public:
     GameWindow();
@@ -33,12 +36,16 @@ public:
 class GameUI : public Player, public TApplication
 {
 private:
-    bool is_need_respond;
+    bool is_step;
+    bool is_place;
     GameWindow *display_battlefield;
+    ship_def *my_ships;
+    int current_ship;
+    pos2d *step;
 
     static TMenuBar *initMenuBar(TRect r);
-    void _on_step();
-    void _on_place();
+    void _on_step(int x, int y);
+    void _on_place(int x, int y);
 
 public:
     GameUI();

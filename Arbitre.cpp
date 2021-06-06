@@ -2,7 +2,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <utility>
-#include <iostream>
+//#include <iostream>
 using namespace std;
 
 Arbitre::Arbitre(Player *a, Player *b)
@@ -27,7 +27,7 @@ bool Arbitre::is_correct_placement(const ship_def test_ships[10])
             (test_ships[i].rot == HORIZONTAL &&
              (test_ships[i].y > 9 || test_ships[i].x + test_ships[i].size - 1 > 9)))
         {
-            cout << "Ship " << i << " is outside of field" << endl;
+            //cout << "Ship " << i << " is outside of field" << endl;
             return false;
         }
 
@@ -52,7 +52,7 @@ bool Arbitre::is_correct_placement(const ship_def test_ships[10])
                 }
                 if (tmp[x][y])
                 {
-                    cout << "Ship " << i << " has collision" << endl;
+                    //cout << "Ship " << i << " has collision" << endl;
                     return false;
                 }
             }
@@ -149,20 +149,20 @@ void Arbitre::do_actions()
             if (step.x < 0 || step.x > 9 || step.y < 0 || step.y > 9)
             {
                 // Out of field; immediately re-request player step.
-                cout << "Incorrect coordinates" << endl;
+                //cout << "Incorrect coordinates" << endl;
                 is_player_responded[current_player] = false;
                 players[current_player]->on_step(my[current_player], enemy[current_player], &step);
                 break; // end of GAME_STEP
             }
 
-            cout << "Player " << side << " make step " << (char)(step.x + 'A') << step.y + 1
-                 << endl;
+            //cout << "Player " << side << " make step " << (char)(step.x + 'A') << step.y + 1
+            //     << endl;
 
             switch (my[alt_side][step.x][step.y])
             {
                 // Unknown state (shot on already marked cell).
             default: {
-                cout << "Incorrect step" << endl;
+                //cout << "Incorrect step" << endl;
                 break;
             }
                 // Player miss. Change sides.
@@ -226,7 +226,7 @@ void Arbitre::do_actions()
                 // Mark ship and area near it in case if it fully drown.
                 if (is_fully_drown)
                 {
-                    cout << "Ship destroyed" << endl;
+                    //cout << "Ship destroyed" << endl;
                     enemy[side][step.x][step.y] = DROWNED;
                     my[alt_side][step.x][step.y] = DROWNED;
                     for (int i = 1; i < 5 && step.y - i >= 0; i++)

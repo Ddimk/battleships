@@ -18,7 +18,7 @@ enum rotation
 
 typedef struct
 {
-    const int size;
+    int size;
     rotation rot;
     int x, y;
 } ship_def;
