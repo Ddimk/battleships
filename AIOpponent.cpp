@@ -56,7 +56,7 @@ void AIOpponent::start_place_ships(ship_def ships[10])
                         for (int x = max(0, ships[i].x - 1);
                              x < min(10, ships[i].x + ships[i].size + 1); x++)
                         {
-                            for (int y = max(0, ships[i].y - 1); y < min(10, ships[i].y + 3); y++)
+                            for (int y = max(0, ships[i].y - 1); y < min(10, ships[i].y + 2); y++)
                             {
                                 bf[x][y] = false;
                             }
@@ -64,7 +64,7 @@ void AIOpponent::start_place_ships(ship_def ships[10])
                     }
                     else
                     {
-                        for (int x = max(0, ships[i].x - 1); x < min(10, ships[i].x + 3); x++)
+                        for (int x = max(0, ships[i].x - 1); x < min(10, ships[i].x + 2); x++)
                         {
                             for (int y = max(0, ships[i].y - 1);
                                  y < min(10, ships[i].y + ships[i].size + 1); y++)

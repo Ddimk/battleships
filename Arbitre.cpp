@@ -317,9 +317,6 @@ void Arbitre::do_actions()
             if (hp[alt_side] == 0)
             {
                 // End of match.
-                players[side]->on_win();
-                players[alt_side]->on_loose();
-
                 is_player_responded[0] = false;
                 is_player_responded[1] = false;
 
@@ -327,6 +324,8 @@ void Arbitre::do_actions()
                 players[1]->need_reset();
 
                 state = GAME_ENDED;
+                players[side]->on_win();
+                players[alt_side]->on_loose();
             }
             else
             {

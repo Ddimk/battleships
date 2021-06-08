@@ -4,7 +4,7 @@ GameWindow::GameWindow()
     : TWindow(TProgram::deskTop->getExtent(), "Battlefield", 0)
     , TWindowInit(&GameWindow::initFrame)
 {
-    options |= ofTileable;
+    dragMode = 0;
     TRect r = getExtent();
     labels[0] = new TStaticText(
         TRect(r.a.x + 1, r.a.y + 1, r.a.x + 88, r.a.y + 2),
@@ -42,7 +42,7 @@ GameWindow::GameWindow()
 
 void GameWindow::print_field(const bf_tile my[10][10], const bf_tile enemy[10][10])
 {
-    static const char water[] = { 0xDB, 0xDB, 0 };
+    static const char water[] = { (char)0xDB, (char)0xDB, 0 };
     static const char crushing[] = { '<', '>', 0 };
     static const char drowned[] = { 0x11, 0x10, 0 };
     static const char missed[] = { 0xB0, 0xB0, 0 };
@@ -134,22 +134,19 @@ void GameUI::handleEvent(TEvent &event)
             break;
         }
     }
-    else if ((event.what == evMouseDown) && (event.mouse.buttons == mbLeftButton))
+    else if (event.what == evMouseDown)
     {
-        if ((event.mouse.where.x >= 4) && (event.mouse.where.x < 45) &&
-            (event.mouse.where.y >= 3) && (event.mouse.where.y < 23) && is_place)
+        TPoint pos = display_battlefield->makeLocal(event.mouse.where);
+        if ((pos.x >= 4) && (pos.x < 45) && (pos.y >= 2) && (pos.y < 22) && is_place)
         {
-            int x = (event.mouse.where.x - 4) / 2;
-            int y = event.mouse.where.y - 3;
-            // printf("NEED PLACE\n");
-            _on_place(x, y);
+            int x = (pos.x - 4) / 2;
+            int y = pos.y - 2;
+            _on_place(x, y, (event.mouse.buttons != mbLeftButton));
         }
-        if ((event.mouse.where.x >= 48) && (event.mouse.where.x < 89) &&
-            (event.mouse.where.y >= 3) && (event.mouse.where.y < 23) && is_step)
+        if ((pos.x >= 48) && (pos.x < 89) && (pos.y >= 2) && (pos.y < 22) && is_step)
         {
-            int x = (event.mouse.where.x - 48) / 2;
-            int y = event.mouse.where.y - 3;
-            // printf("NEED STEP\n");
+            int x = (pos.x - 48) / 2;
+            int y = pos.y - 2;
             _on_step(x, y);
         }
     }
@@ -163,70 +160,136 @@ void GameUI::_on_step(int x, int y)
     responded();
 }
 
-void GameUI::_on_place(int x, int y)
+void GameUI::_on_place(int pos_x, int pos_y, bool horizontal)
 {
-    my_ships[0].rot = HORIZONTAL;
-    my_ships[0].x = 6;
-    my_ships[0].y = 0;
-    my_ships[1].rot = VERTICAL;
-    my_ships[1].x = 3;
-    my_ships[1].y = 0;
-    my_ships[2].rot = VERTICAL;
-    my_ships[2].x = 1;
-    my_ships[2].y = 4;
-    my_ships[3].rot = HORIZONTAL;
-    my_ships[3].x = 0;
-    my_ships[3].y = 0;
-    my_ships[4].rot = VERTICAL;
-    my_ships[4].x = 9;
-    my_ships[4].y = 2;
-    my_ships[5].rot = VERTICAL;
-    my_ships[5].x = 8;
-    my_ships[5].y = 8;
-    my_ships[6].rot = HORIZONTAL;
-    my_ships[6].x = 0;
-    my_ships[6].y = 9;
-    my_ships[7].rot = HORIZONTAL;
-    my_ships[7].x = 3;
-    my_ships[7].y = 8;
-    my_ships[8].rot = HORIZONTAL;
-    my_ships[8].x = 5;
-    my_ships[8].y = 8;
-    my_ships[9].rot = HORIZONTAL;
-    my_ships[9].x = 6;
-    my_ships[9].y = 5;
+    if (current_ship == 0)
+    {
+        for (int i = 0; i < 10; i++)
+            for (int j = 0; j < 10; j++)
+                bf[i][j] = true;
+    }
 
-    is_place = false;
-    responded();
+    if ((pos_x < 0) || (pos_x > 9) || (pos_y < 0) || (pos_y > 9))
+    {
+        return;
+    }
+
+    if ((horizontal && (pos_x + my_ships[current_ship].size > 10)) ||
+        ((!horizontal) && (pos_y + my_ships[current_ship].size > 10)))
+    {
+        return;
+    }
+
+    bool can_add = true;
+
+    my_ships[current_ship].x = pos_x;
+    my_ships[current_ship].y = pos_y;
+    if (horizontal)
+    {
+        my_ships[current_ship].rot = HORIZONTAL;
+        for (int x = pos_x; x < pos_x + my_ships[current_ship].size; x++)
+        {
+            can_add = can_add && bf[x][pos_y];
+        }
+    }
+    else
+    {
+        my_ships[current_ship].rot = VERTICAL;
+        for (int y = pos_y; y < pos_y + my_ships[current_ship].size; y++)
+        {
+            can_add = can_add && bf[pos_x][y];
+        }
+    }
+    if (!can_add)
+    {
+        return;
+    }
+
+    if (horizontal)
+    {
+        for (int x = max(0, pos_x - 1); x < min(10, pos_x + my_ships[current_ship].size + 1); x++)
+        {
+            for (int y = max(0, pos_y - 1); y < min(10, pos_y + 2); y++)
+            {
+                bf[x][y] = false;
+            }
+        }
+    }
+    else
+    {
+        for (int x = max(0, pos_x - 1); x < min(10, pos_x + 2); x++)
+        {
+            for (int y = max(0, pos_y - 1); y < min(10, pos_y + my_ships[current_ship].size + 1);
+                 y++)
+            {
+                bf[x][y] = false;
+            }
+        }
+    }
+
+    if (horizontal)
+    {
+        for (int x = pos_x; x < pos_x + my_ships[current_ship].size; x++)
+        {
+            tmy[x][pos_y] = INTACT;
+        }
+    }
+    else
+    {
+        for (int y = pos_y; y < pos_y + my_ships[current_ship].size; y++)
+        {
+            tmy[pos_x][y] = INTACT;
+        }
+    }
+
+    display_battlefield->print_field(tmy, tenemy);
+
+    if (current_ship == 9)
+    {
+        is_place = false;
+        responded();
+    }
+    else
+    {
+        current_ship++;
+    }
 }
 
 void GameUI::on_win()
 {
+    TDialog *d = new TDialog(TRect(25, 5, 55, 15), "You win!");
+
+    d->insert(new TStaticText(TRect(10, 2, 25, 3), "You win!"));
+    d->insert(new TButton(TRect(5, 5, 25, 9), "Start new game", cmCancel, bfNormal));
+
+    deskTop->execView(d);
+    destroy(d);
 }
 
 void GameUI::on_loose()
 {
+    TDialog *d = new TDialog(TRect(25, 5, 55, 15), "You lose.");
+
+    d->insert(new TStaticText(TRect(10, 2, 25, 3), "You lose."));
+    d->insert(new TButton(TRect(5, 5, 25, 9), "Start new game", cmCancel, bfNormal));
+
+    deskTop->execView(d);
+    destroy(d);
 }
 
 void GameUI::start_place_ships(ship_def ships[10])
 {
-    bf_tile my[10][10];
-    bf_tile enemy[10][10];
     for (int i = 0; i < 10; i++)
     {
         for (int j = 0; j < 10; j++)
         {
-            my[i][j] = UNKNOWN;
-            enemy[i][j] = UNKNOWN;
+            tmy[i][j] = UNKNOWN;
+            tenemy[i][j] = UNKNOWN;
         }
     }
 
-    display_battlefield->print_field(my, enemy);
+    display_battlefield->print_field(tmy, tenemy);
     current_ship = 0;
-    /*for (int i = 0; i < 10; i++)
-    {
-        my_ships[i] = ships[i];
-    }*/
     my_ships = ships;
     is_place = true;
 }

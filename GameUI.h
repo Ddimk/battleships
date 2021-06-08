@@ -42,10 +42,13 @@ private:
     ship_def *my_ships;
     int current_ship;
     pos2d *step;
+    bool bf[10][10];
+    bf_tile tmy[10][10];
+    bf_tile tenemy[10][10];
 
     static TMenuBar *initMenuBar(TRect r);
     void _on_step(int x, int y);
-    void _on_place(int x, int y);
+    void _on_place(int x, int y, bool horizontal);
 
 public:
     GameUI();
