@@ -33,10 +33,12 @@ class Player
 private:
     bool *_responded = nullptr;
     void (*_do_game_step)() = nullptr;
+    void (*_do_game_reset)() = nullptr;
 
 public:
     void set_responding(bool *respond) { this->_responded = respond; }
     void set_game_step(void (*callback)()) { this->_do_game_step = callback; }
+    void set_game_reset(void (*callback)()) { this->_do_game_reset = callback; }
     virtual void need_reset() { responded(); }
     virtual void on_win() = 0;
     virtual void on_loose() = 0;
@@ -56,6 +58,13 @@ protected:
         if (_do_game_step)
         {
             _do_game_step();
+        }
+    }
+    void do_game_reset()
+    {
+        if (_do_game_reset)
+        {
+            _do_game_reset();
         }
     }
 };

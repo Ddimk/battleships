@@ -125,7 +125,7 @@ void GameUI::handleEvent(TEvent &event)
         switch (event.message.command)
         {
         case 100:
-
+            do_game_reset();
             display_battlefield->show();
 
             clearEvent(event);
@@ -141,13 +141,19 @@ void GameUI::handleEvent(TEvent &event)
         {
             int x = (pos.x - 4) / 2;
             int y = pos.y - 2;
-            _on_place(x, y, (event.mouse.buttons != mbLeftButton));
+            if (is_place)
+            {
+                _on_place(x, y, (event.mouse.buttons != mbLeftButton));
+            }
         }
         if ((pos.x >= 48) && (pos.x < 89) && (pos.y >= 2) && (pos.y < 22) && is_step)
         {
             int x = (pos.x - 48) / 2;
             int y = pos.y - 2;
-            _on_step(x, y);
+            if (is_step)
+            {
+                _on_step(x, y);
+            }
         }
     }
 }

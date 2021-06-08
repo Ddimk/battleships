@@ -10,12 +10,18 @@ void do_game_step()
     game->do_actions();
 }
 
+void do_reset_game()
+{
+    game->reset_game();
+}
+
 int main(void)
 {
     GameUI a;
     AIOpponent b;
     game = new Arbitre(&a, &b);
     a.set_game_step(do_game_step);
+    a.set_game_reset(do_reset_game);
     game->reset_game();
 
     a.run();
