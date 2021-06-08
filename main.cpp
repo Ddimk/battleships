@@ -10,9 +10,9 @@ void do_game_step()
     game->do_actions();
 }
 
-void do_reset_game()
+void do_reset_game(int x, int y)
 {
-    game->reset_game();
+    game->reset_game(x, y);
 }
 
 int main(void)

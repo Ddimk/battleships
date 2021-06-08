@@ -33,13 +33,20 @@ class Player
 private:
     bool *_responded = nullptr;
     void (*_do_game_step)() = nullptr;
-    void (*_do_game_reset)() = nullptr;
+    void (*_do_game_reset)(int x, int y) = nullptr;
+    int size_x;
+    int size_y;
 
 public:
     void set_responding(bool *respond) { this->_responded = respond; }
     void set_game_step(void (*callback)()) { this->_do_game_step = callback; }
-    void set_game_reset(void (*callback)()) { this->_do_game_reset = callback; }
-    virtual void need_reset() { responded(); }
+    void set_game_reset(void (*callback)(int x, int y)) { this->_do_game_reset = callback; }
+    virtual void need_reset(int x, int y)
+    {
+        size_x = x;
+        size_y = y;
+        responded();
+    }
     virtual void on_win() = 0;
     virtual void on_loose() = 0;
     virtual void start_place_ships(ship_def ships[10]) = 0;
@@ -60,11 +67,11 @@ protected:
             _do_game_step();
         }
     }
-    void do_game_reset()
+    void do_game_reset(int x, int y)
     {
         if (_do_game_reset)
         {
-            _do_game_reset();
+            _do_game_reset(x, y);
         }
     }
 };

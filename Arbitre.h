@@ -41,17 +41,25 @@ private:
     pos2d step;
     int current_player;
     game_state state;
+    int size_x;
+    int size_y;
 
 public:
     Arbitre(Player *a, Player *b);
     static bool is_correct_placement(const ship_def ships[10]);
-    void reset_game()
+    void reset_game(int x, int y)
     {
+        if ((x < 10) || (x > 20) || (y < 10) || (y > 20))
+        {
+            return;
+        }
+        size_x = x;
+        size_y = y;
         state = GAME_ENDED;
         is_player_responded[0] = false;
         is_player_responded[1] = false;
-        players[0]->need_reset();
-        players[1]->need_reset();
+        players[0]->need_reset(x, y);
+        players[1]->need_reset(x, y);
         do_actions();
     };
     void do_actions();
