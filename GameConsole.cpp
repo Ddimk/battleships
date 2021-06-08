@@ -66,16 +66,16 @@ void GameConsole::start_place_ships(ship_def ships[10])
     responded();
 }
 
-void GameConsole::on_step(const bf_tile my[10][10], const bf_tile enemy[10][10], pos2d *result)
+void GameConsole::on_step(const bf_tile my[20][20], const bf_tile enemy[20][20], pos2d *result)
 {
     cout << "Make shot" << endl;
     cout << "  ABCDEFGHIJ   ABCDEFGHIJ" << endl;
-    for (int y = 0; y < 10; y++)
+    for (int y = 0; y < size_y; y++)
     {
-        if (y < 9)
+        if (y < size_y - 1)
             cout << " ";
         cout << y + 1;
-        for (int x = 0; x < 10; x++)
+        for (int x = 0; x < size_x; x++)
         {
             char c;
             switch (my[x][y])
@@ -102,10 +102,10 @@ void GameConsole::on_step(const bf_tile my[10][10], const bf_tile enemy[10][10],
             cout << c;
         }
 
-        if (y < 9)
+        if (y < size_y - 1)
             cout << " ";
         cout << " " << y + 1;
-        for (int x = 0; x < 10; x++)
+        for (int x = 0; x < size_x; x++)
         {
             char c;
             switch (enemy[x][y])

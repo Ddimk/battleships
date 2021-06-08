@@ -34,6 +34,8 @@ private:
     bool *_responded = nullptr;
     void (*_do_game_step)() = nullptr;
     void (*_do_game_reset)(int x, int y) = nullptr;
+
+protected:
     int size_x;
     int size_y;
 
@@ -50,7 +52,7 @@ public:
     virtual void on_win() = 0;
     virtual void on_loose() = 0;
     virtual void start_place_ships(ship_def ships[10]) = 0;
-    virtual void on_step(const bf_tile my[10][10], const bf_tile enemy[10][10], pos2d *result) = 0;
+    virtual void on_step(const bf_tile my[20][20], const bf_tile enemy[20][20], pos2d *result) = 0;
 
 protected:
     void responded()

@@ -30,7 +30,7 @@ private:
 public:
     GameWindow();
     void close() { hide(); };
-    void print_field(const bf_tile my[10][10], const bf_tile enemy[10][10]);
+    void print_field(const bf_tile my[20][20], const bf_tile enemy[20][20], int size_x, int size_y);
 };
 
 class GameUI : public Player, public TApplication
@@ -42,9 +42,9 @@ private:
     ship_def *my_ships;
     int current_ship;
     pos2d *step;
-    bool bf[10][10];
-    bf_tile tmy[10][10];
-    bf_tile tenemy[10][10];
+    bool bf[20][20];
+    bf_tile tmy[20][20];
+    bf_tile tenemy[20][20];
 
     static TMenuBar *initMenuBar(TRect r);
     void _on_step(int x, int y);
@@ -57,6 +57,6 @@ public:
     void on_win();
     void on_loose();
     void start_place_ships(ship_def ships[10]);
-    void on_step(const bf_tile my[10][10], const bf_tile enemy[10][10], pos2d *result);
+    void on_step(const bf_tile my[20][20], const bf_tile enemy[20][20], pos2d *result);
     void need_reset();
 };

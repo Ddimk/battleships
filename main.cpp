@@ -22,7 +22,6 @@ int main(void)
     game = new Arbitre(&a, &b);
     a.set_game_step(do_game_step);
     a.set_game_reset(do_reset_game);
-    game->reset_game();
 
     a.run();
 

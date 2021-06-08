@@ -40,7 +40,7 @@ GameWindow::GameWindow()
     }
 }
 
-void GameWindow::print_field(const bf_tile my[10][10], const bf_tile enemy[10][10])
+void GameWindow::print_field(const bf_tile my[20][20], const bf_tile enemy[20][20], int size_x, int size_y)
 {
     static const char water[] = { (char)0xDB, (char)0xDB, 0 };
     static const char crushing[] = { '<', '>', 0 };
@@ -49,9 +49,9 @@ void GameWindow::print_field(const bf_tile my[10][10], const bf_tile enemy[10][1
     static const char useless[] = { 0xB1, 0xB1, 0 };
     static const char ship[] = { '[', ']', 0 };
 
-    for (int y = 0; y < 10; y++)
+    for (int y = 0; y < size_y; y++)
     {
-        for (int x = 0; x < 10; x++)
+        for (int x = 0; x < size_x; x++)
         {
             switch (my[x][y])
             {
@@ -114,7 +114,7 @@ TMenuBar *GameUI::initMenuBar(TRect r)
 
     return new TMenuBar(r, *new TSubMenu("Menu", kbAltH) + *new TMenuItem("New Game", 100, kbAltG) +
                                newLine() +
-                               *new TMenuItem("E~x~it", cmQuit, cmQuit, hcNoContext, "Alt-X"));
+                               *new TMenuItem("Exit", cmQuit, cmQuit, hcNoContext, "Alt-X"));
 }
 
 void GameUI::handleEvent(TEvent &event)
@@ -125,7 +125,7 @@ void GameUI::handleEvent(TEvent &event)
         switch (event.message.command)
         {
         case 100:
-            do_game_reset();
+            do_game_reset(11, 13);
             display_battlefield->show();
 
             clearEvent(event);
@@ -170,18 +170,18 @@ void GameUI::_on_place(int pos_x, int pos_y, bool horizontal)
 {
     if (current_ship == 0)
     {
-        for (int i = 0; i < 10; i++)
-            for (int j = 0; j < 10; j++)
+        for (int i = 0; i < size_x; i++)
+            for (int j = 0; j < size_y; j++)
                 bf[i][j] = true;
     }
 
-    if ((pos_x < 0) || (pos_x > 9) || (pos_y < 0) || (pos_y > 9))
+    if ((pos_x < 0) || (pos_x > size_x -1) || (pos_y < 0) || (pos_y > size_y -1))
     {
         return;
     }
 
-    if ((horizontal && (pos_x + my_ships[current_ship].size > 10)) ||
-        ((!horizontal) && (pos_y + my_ships[current_ship].size > 10)))
+    if ((horizontal && (pos_x + my_ships[current_ship].size > size_x)) ||
+        ((!horizontal) && (pos_y + my_ships[current_ship].size > size_y)))
     {
         return;
     }
@@ -213,9 +213,9 @@ void GameUI::_on_place(int pos_x, int pos_y, bool horizontal)
 
     if (horizontal)
     {
-        for (int x = max(0, pos_x - 1); x < min(10, pos_x + my_ships[current_ship].size + 1); x++)
+        for (int x = max(0, pos_x - 1); x < min(size_x, pos_x + my_ships[current_ship].size + 1); x++)
         {
-            for (int y = max(0, pos_y - 1); y < min(10, pos_y + 2); y++)
+            for (int y = max(0, pos_y - 1); y < min(size_y, pos_y + 2); y++)
             {
                 bf[x][y] = false;
             }
@@ -223,9 +223,9 @@ void GameUI::_on_place(int pos_x, int pos_y, bool horizontal)
     }
     else
     {
-        for (int x = max(0, pos_x - 1); x < min(10, pos_x + 2); x++)
+        for (int x = max(0, pos_x - 1); x < min(size_x, pos_x + 2); x++)
         {
-            for (int y = max(0, pos_y - 1); y < min(10, pos_y + my_ships[current_ship].size + 1);
+            for (int y = max(0, pos_y - 1); y < min(size_y, pos_y + my_ships[current_ship].size + 1);
                  y++)
             {
                 bf[x][y] = false;
@@ -248,7 +248,7 @@ void GameUI::_on_place(int pos_x, int pos_y, bool horizontal)
         }
     }
 
-    display_battlefield->print_field(tmy, tenemy);
+    display_battlefield->print_field(tmy, tenemy, size_x, size_y);
 
     if (current_ship == 9)
     {
@@ -285,24 +285,24 @@ void GameUI::on_loose()
 
 void GameUI::start_place_ships(ship_def ships[10])
 {
-    for (int i = 0; i < 10; i++)
+    for (int i = 0; i < size_x; i++)
     {
-        for (int j = 0; j < 10; j++)
+        for (int j = 0; j < size_y; j++)
         {
             tmy[i][j] = UNKNOWN;
             tenemy[i][j] = UNKNOWN;
         }
     }
 
-    display_battlefield->print_field(tmy, tenemy);
+    display_battlefield->print_field(tmy, tenemy, size_x, size_y);
     current_ship = 0;
     my_ships = ships;
     is_place = true;
 }
 
-void GameUI::on_step(const bf_tile my[10][10], const bf_tile enemy[10][10], pos2d *result)
+void GameUI::on_step(const bf_tile my[20][20], const bf_tile enemy[20][20], pos2d *result)
 {
-    display_battlefield->print_field(my, enemy);
+    display_battlefield->print_field(my, enemy, size_x, size_y);
     step = result;
     is_step = true;
 }

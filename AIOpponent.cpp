@@ -18,9 +18,9 @@ void AIOpponent::start_place_ships(ship_def ships[10])
     do
     {
         is_finish = true;
-        bool bf[10][10];
-        for (int i = 0; i < 10; i++)
-            for (int j = 0; j < 10; j++)
+        bool bf[20][20];
+        for (int i = 0; i < size_x; i++)
+            for (int j = 0; j < size_y; j++)
                 bf[i][j] = true;
         for (int i = 0; i < 10; i++)
         {
@@ -31,8 +31,8 @@ void AIOpponent::start_place_ships(ship_def ships[10])
                 if (rand() % 2)
                 {
                     ships[i].rot = HORIZONTAL;
-                    ships[i].x = rand() % (11 - ships[i].size);
-                    ships[i].y = rand() % 10;
+                    ships[i].x = rand() % (1 + size_x - ships[i].size);
+                    ships[i].y = rand() % size_y;
                     for (int x = ships[i].x; x < ships[i].x + ships[i].size; x++)
                     {
                         can_add = can_add && bf[x][ships[i].y];
@@ -41,8 +41,8 @@ void AIOpponent::start_place_ships(ship_def ships[10])
                 else
                 {
                     ships[i].rot = VERTICAL;
-                    ships[i].x = rand() % 10;
-                    ships[i].y = rand() % (11 - ships[i].size);
+                    ships[i].x = rand() % size_x;
+                    ships[i].y = rand() % (1 + size_y - ships[i].size);
                     for (int y = ships[i].y; y < ships[i].y + ships[i].size; y++)
                     {
                         can_add = can_add && bf[ships[i].x][y];
@@ -54,9 +54,9 @@ void AIOpponent::start_place_ships(ship_def ships[10])
                     if (ships[i].rot == HORIZONTAL)
                     {
                         for (int x = max(0, ships[i].x - 1);
-                             x < min(10, ships[i].x + ships[i].size + 1); x++)
+                             x < min(size_x, ships[i].x + ships[i].size + 1); x++)
                         {
-                            for (int y = max(0, ships[i].y - 1); y < min(10, ships[i].y + 2); y++)
+                            for (int y = max(0, ships[i].y - 1); y < min(size_y, ships[i].y + 2); y++)
                             {
                                 bf[x][y] = false;
                             }
@@ -64,10 +64,10 @@ void AIOpponent::start_place_ships(ship_def ships[10])
                     }
                     else
                     {
-                        for (int x = max(0, ships[i].x - 1); x < min(10, ships[i].x + 2); x++)
+                        for (int x = max(0, ships[i].x - 1); x < min(size_x, ships[i].x + 2); x++)
                         {
                             for (int y = max(0, ships[i].y - 1);
-                                 y < min(10, ships[i].y + ships[i].size + 1); y++)
+                                 y < min(size_y, ships[i].y + ships[i].size + 1); y++)
                             {
                                 bf[x][y] = false;
                             }
@@ -77,10 +77,10 @@ void AIOpponent::start_place_ships(ship_def ships[10])
                 else
                 {
                     is_finish = false;
-                    for (int x = 0; x < 10; x++)
+                    for (int x = 0; x < size_x; x++)
                     {
                         int count = 0;
-                        for (int y = 0; y < 10; y++)
+                        for (int y = 0; y < size_y; y++)
                         {
                             if (bf[x][y])
                             {
@@ -103,10 +103,10 @@ void AIOpponent::start_place_ships(ship_def ships[10])
                     }
                     if (!is_finish)
                     {
-                        for (int y = 0; y < 10; y++)
+                        for (int y = 0; y < size_y; y++)
                         {
                             int count = 0;
-                            for (int x = 0; x < 10; x++)
+                            for (int x = 0; x < size_x; x++)
                             {
                                 if (bf[x][y])
                                 {
@@ -139,7 +139,7 @@ void AIOpponent::start_place_ships(ship_def ships[10])
     responded();
 }
 
-void AIOpponent::on_step(const bf_tile my[10][10], const bf_tile enemy[10][10], pos2d* result)
+void AIOpponent::on_step(const bf_tile my[20][20], const bf_tile enemy[20][20], pos2d* result)
 {
     pos2d res;
 
@@ -147,16 +147,16 @@ void AIOpponent::on_step(const bf_tile my[10][10], const bf_tile enemy[10][10], 
     vector<pos2d> pass_1;
     vector<pos2d> pass_0;
 
-    for (int x = 0; x < 10; x++)
+    for (int x = 0; x < size_x; x++)
     {
-        for (int y = 0; y < 10; y++)
+        for (int y = 0; y < size_y; y++)
         {
             if (enemy[x][y] == HITTED)
             {
                 bool has_nearby_hit = false;
                 enum rotation rot;
                 vector<pos2d> shoot_near;
-                if (x < 9)
+                if (x < size_x -1)
                 {
                     if (enemy[x + 1][y] == HITTED)
                     {
@@ -198,7 +198,7 @@ void AIOpponent::on_step(const bf_tile my[10][10], const bf_tile enemy[10][10], 
                         shoot_near.push_back(res);
                     }
                 }
-                if (y < 9)
+                if (y < size_y -1)
                 {
                     if (enemy[x][y + 1] == HITTED)
                     {
@@ -218,7 +218,7 @@ void AIOpponent::on_step(const bf_tile my[10][10], const bf_tile enemy[10][10], 
                     {
                         if (rot == HORIZONTAL)
                         {
-                            if (x + i < 10 && enemy[x + i][y] == UNKNOWN)
+                            if (x + i < size_x && enemy[x + i][y] == UNKNOWN)
                             {
                                 result->x = x + i;
                                 result->y = y;
@@ -235,7 +235,7 @@ void AIOpponent::on_step(const bf_tile my[10][10], const bf_tile enemy[10][10], 
                         }
                         else
                         {
-                            if (y + i < 10 && enemy[x][y + i] == UNKNOWN)
+                            if (y + i < size_y && enemy[x][y + i] == UNKNOWN)
                             {
                                 result->x = x;
                                 result->y = y + i;

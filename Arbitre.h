@@ -13,8 +13,8 @@ private:
     };
 
     Player *players[2];
-    bf_tile my[2][10][10];
-    bf_tile enemy[2][10][10];
+    bf_tile my[2][20][20];
+    bf_tile enemy[2][20][20];
     ship_def ships[2][10] = { { { 4, HORIZONTAL, 0, 0 },
                                 { 3, HORIZONTAL, 0, 0 },
                                 { 3, HORIZONTAL, 0, 0 },
@@ -46,7 +46,7 @@ private:
 
 public:
     Arbitre(Player *a, Player *b);
-    static bool is_correct_placement(const ship_def ships[10]);
+    bool is_correct_placement(const ship_def ships[10]);
     void reset_game(int x, int y)
     {
         if ((x < 10) || (x > 20) || (y < 10) || (y > 20))

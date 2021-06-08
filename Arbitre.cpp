@@ -2,7 +2,6 @@
 #include <cstdlib>
 #include <ctime>
 #include <utility>
-//#include <iostream>
 using namespace std;
 
 Arbitre::Arbitre(Player *a, Player *b)
@@ -14,20 +13,21 @@ Arbitre::Arbitre(Player *a, Player *b)
     players[1]->set_responding(&is_player_responded[1]);
     // Do not ask players for reset as we call reset_game explicitely.
     state = GAME_ENDED;
+    is_player_responded[0] = false;
+    is_player_responded[1] = false;
 }
 bool Arbitre::is_correct_placement(const ship_def test_ships[10])
 {
-    bool tmp[10][10] = { 0 };
+    bool tmp[20][20] = { 0 };
 
     for (int i = 0; i < 10; i++)
     {
         if (test_ships[i].x < 0 || test_ships[i].y < 0 ||
             (test_ships[i].rot == VERTICAL &&
-             (test_ships[i].x > 9 || test_ships[i].y + test_ships[i].size - 1 > 9)) ||
+             (test_ships[i].x > size_x - 1 || test_ships[i].y + test_ships[i].size > size_y)) ||
             (test_ships[i].rot == HORIZONTAL &&
-             (test_ships[i].y > 9 || test_ships[i].x + test_ships[i].size - 1 > 9)))
+             (test_ships[i].y > size_y - 1 || test_ships[i].x + test_ships[i].size > size_x)))
         {
-            //cout << "Ship " << i << " is outside of field" << endl;
             return false;
         }
 
@@ -46,13 +46,12 @@ bool Arbitre::is_correct_placement(const ship_def test_ships[10])
                     x = test_ships[i].x + w;
                     y = test_ships[i].y + l;
                 }
-                if (x < 0 || x > 9 || y < 0 || y > 9)
+                if (x < 0 || x > size_x - 1 || y < 0 || y > size_y - 1)
                 {
                     continue;
                 }
                 if (tmp[x][y])
                 {
-                    //cout << "Ship " << i << " has collision" << endl;
                     return false;
                 }
             }
@@ -80,9 +79,9 @@ void Arbitre::do_actions()
     case NEED_INIT: {
         current_player = rand() & 1;
 
-        for (int i = 0; i < 10; i++)
+        for (int i = 0; i < size_x; i++)
         {
-            for (int j = 0; j < 10; j++)
+            for (int j = 0; j < size_y; j++)
             {
                 my[0][i][j] = UNKNOWN;
                 my[1][i][j] = UNKNOWN;
@@ -146,23 +145,18 @@ void Arbitre::do_actions()
             int side = current_player;
             int alt_side = 1 - side;
 
-            if (step.x < 0 || step.x > 9 || step.y < 0 || step.y > 9)
+            if (step.x < 0 || step.x > size_x - 1 || step.y < 0 || step.y > size_y - 1)
             {
                 // Out of field; immediately re-request player step.
-                //cout << "Incorrect coordinates" << endl;
                 is_player_responded[current_player] = false;
                 players[current_player]->on_step(my[current_player], enemy[current_player], &step);
                 break; // end of GAME_STEP
             }
 
-            //cout << "Player " << side << " make step " << (char)(step.x + 'A') << step.y + 1
-            //     << endl;
-
             switch (my[alt_side][step.x][step.y])
             {
                 // Unknown state (shot on already marked cell).
             default: {
-                //cout << "Incorrect step" << endl;
                 break;
             }
                 // Player miss. Change sides.
@@ -190,7 +184,7 @@ void Arbitre::do_actions()
                         break;
                     }
                 }
-                for (int i = 1; i < 4 && step.y + i < 10; i++)
+                for (int i = 1; i < 4 && step.y + i < size_y; i++)
                 {
                     if (my[alt_side][step.x][step.y + i] != HITTED)
                     {
@@ -212,7 +206,7 @@ void Arbitre::do_actions()
                         break;
                     }
                 }
-                for (int i = 1; i < 4 && step.x + i < 10; i++)
+                for (int i = 1; i < 4 && step.x + i < size_x; i++)
                 {
                     if (my[alt_side][step.x + i][step.y] != HITTED)
                     {
@@ -226,7 +220,6 @@ void Arbitre::do_actions()
                 // Mark ship and area near it in case if it fully drown.
                 if (is_fully_drown)
                 {
-                    //cout << "Ship destroyed" << endl;
                     enemy[side][step.x][step.y] = DROWNED;
                     my[alt_side][step.x][step.y] = DROWNED;
                     for (int i = 1; i < 5 && step.y - i >= 0; i++)
@@ -245,7 +238,7 @@ void Arbitre::do_actions()
                             break;
                         }
                     }
-                    for (int i = 1; i < 5 && step.y + i < 10; i++)
+                    for (int i = 1; i < 5 && step.y + i < size_y; i++)
                     {
                         if (my[alt_side][step.x][step.y + i] == HITTED)
                         {
@@ -277,7 +270,7 @@ void Arbitre::do_actions()
                             break;
                         }
                     }
-                    for (int i = 1; i < 5 && step.x + i < 10; i++)
+                    for (int i = 1; i < 5 && step.x + i < size_x; i++)
                     {
                         if (my[alt_side][step.x + i][step.y] == HITTED)
                         {
@@ -298,15 +291,18 @@ void Arbitre::do_actions()
                 {
                     enemy[side][step.x - 1][step.y - 1] = USELESS;
                 }
-                if (step.x < 9 && step.y > 0 && my[alt_side][step.x + 1][step.y - 1] == UNKNOWN)
+                if (step.x < size_x - 1 && step.y > 0 &&
+                    my[alt_side][step.x + 1][step.y - 1] == UNKNOWN)
                 {
                     enemy[side][step.x + 1][step.y - 1] = USELESS;
                 }
-                if (step.x < 9 && step.y < 9 && my[alt_side][step.x + 1][step.y + 1] == UNKNOWN)
+                if (step.x < size_x - 1 && step.y < size_y - 1 &&
+                    my[alt_side][step.x + 1][step.y + 1] == UNKNOWN)
                 {
                     enemy[side][step.x + 1][step.y + 1] = USELESS;
                 }
-                if (step.x > 0 && step.y < 9 && my[alt_side][step.x - 1][step.y + 1] == UNKNOWN)
+                if (step.x > 0 && step.y < size_y - 1 &&
+                    my[alt_side][step.x - 1][step.y + 1] == UNKNOWN)
                 {
                     enemy[side][step.x - 1][step.y + 1] = USELESS;
                 }
@@ -320,8 +316,8 @@ void Arbitre::do_actions()
                 is_player_responded[0] = false;
                 is_player_responded[1] = false;
 
-                players[0]->need_reset();
-                players[1]->need_reset();
+                players[0]->need_reset(size_x, size_y);
+                players[1]->need_reset(size_x, size_y);
 
                 state = GAME_ENDED;
                 players[side]->on_win();
