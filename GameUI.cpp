@@ -40,7 +40,8 @@ GameWindow::GameWindow()
     }
 }
 
-void GameWindow::print_field(const bf_tile my[20][20], const bf_tile enemy[20][20], int size_x, int size_y)
+void GameWindow::print_field(const bf_tile my[20][20], const bf_tile enemy[20][20], int size_x,
+                             int size_y)
 {
     static const char water[] = { (char)0xDB, (char)0xDB, 0 };
     static const char crushing[] = { '<', '>', 0 };
@@ -125,11 +126,30 @@ void GameUI::handleEvent(TEvent &event)
         switch (event.message.command)
         {
         case 100:
-            do_game_reset(11, 13);
+        {
+            char data[2][3] = { "10", "10" };
+            TDialog *d = new TDialog(TRect(25, 5, 55, 15), "New game");
+
+            d->insert(new TInputLine(TRect(16, 2, 23, 3), 3));
+            d->insert(new TInputLine(TRect(16, 4, 23, 5), 3));
+            d->insert(new TStaticText(TRect(7, 2, 14, 3), "X size:"));
+            d->insert(new TStaticText(TRect(7, 4, 14, 5), "Y size:"));
+            d->insert(new TButton(TRect(5, 7, 25, 9), "Start new game", cmCancel, bfNormal));
+
+            d->setData(data);
+            deskTop->execView(d);
+            d->getData(data);
+            destroy(d);
+
+            int x = max(10, min(20, atoi(data[0])));
+            int y = max(10, min(20, atoi(data[1])));
+
+            do_game_reset(x, y);
             display_battlefield->show();
 
             clearEvent(event);
             break;
+        }
         default:
             break;
         }
@@ -175,7 +195,7 @@ void GameUI::_on_place(int pos_x, int pos_y, bool horizontal)
                 bf[i][j] = true;
     }
 
-    if ((pos_x < 0) || (pos_x > size_x -1) || (pos_y < 0) || (pos_y > size_y -1))
+    if ((pos_x < 0) || (pos_x > size_x - 1) || (pos_y < 0) || (pos_y > size_y - 1))
     {
         return;
     }
@@ -213,7 +233,8 @@ void GameUI::_on_place(int pos_x, int pos_y, bool horizontal)
 
     if (horizontal)
     {
-        for (int x = max(0, pos_x - 1); x < min(size_x, pos_x + my_ships[current_ship].size + 1); x++)
+        for (int x = max(0, pos_x - 1); x < min(size_x, pos_x + my_ships[current_ship].size + 1);
+             x++)
         {
             for (int y = max(0, pos_y - 1); y < min(size_y, pos_y + 2); y++)
             {
@@ -225,8 +246,8 @@ void GameUI::_on_place(int pos_x, int pos_y, bool horizontal)
     {
         for (int x = max(0, pos_x - 1); x < min(size_x, pos_x + 2); x++)
         {
-            for (int y = max(0, pos_y - 1); y < min(size_y, pos_y + my_ships[current_ship].size + 1);
-                 y++)
+            for (int y = max(0, pos_y - 1);
+                 y < min(size_y, pos_y + my_ships[current_ship].size + 1); y++)
             {
                 bf[x][y] = false;
             }

@@ -8,6 +8,7 @@
 #define Uses_TDialog
 #define Uses_TParamText
 #define Uses_TStaticText
+#define Uses_TInputLine
 #define Uses_TButton
 #define Uses_TMenuBar
 #define Uses_TSubMenu
